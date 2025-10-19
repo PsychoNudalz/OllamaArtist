@@ -5,14 +5,17 @@ import uuid
 import random
 import asyncio
 import traceback
+import logging
 
 from PIL import Image
 import io
 
 import websocket
 
+from ModelEnum import ModelNames
 from ImageOrder import ImageOrder
 
+logging.basicConfig(level=logging.INFO)
 
 WORKFLOW_PATH = "ComfyUIWorkflow/"
 WORKFLOW_FILE = "ImageOrderWF.json"
@@ -55,25 +58,14 @@ async def generate_image(order: ImageOrder, save_to_time=False, workflow_file=WO
         json_str = f.read()
     prompt = json.loads(json_str)
 
-    #Passing in the prompt
-    promptInputIndex = look_for_node_by_name("I_PROMPT_POSITIVE", prompt)
-    if promptInputIndex == -1:
-        print("Prompt node not found in workflow")
-        return ""
-    else:
-        prompt[f"{promptInputIndex}"]["inputs"]["value"] = order.to_prompt()
-
-    print(prompt[f"{promptInputIndex}"]["inputs"]["value"])
-
-    # Change the seed for different results
-    prompt["3"]["inputs"]["seed"] = random.randint(0, 1000000)
+    prompt = apply_image_order_to_prompt(order, prompt)
 
     try:
 
         ws = websocket.WebSocket()
         ws.connect(f"ws://{SERVER_ADDRESS}/ws?clientId={CLIENT_ID}")
     except ConnectionRefusedError as e:
-        print(f"Error connecting to the server: {SERVER_ADDRESS}\nMake sure ComfyUI is running\n{e}")
+        logging.info(f"Error connecting to the server: {SERVER_ADDRESS}\nMake sure ComfyUI is running\n{e}")
         return ""
 
     try:
@@ -82,11 +74,10 @@ async def generate_image(order: ImageOrder, save_to_time=False, workflow_file=WO
         # Get prompt_id for tracking the execution
         prompt_id = queue_prompt(prompt, CLIENT_ID)['prompt_id']
 
-
         ## Handling history
         # await asyncio.sleep(5)
         history = {}
-        historyFailSafe:int = 0
+        historyFailSafe: int = 0
 
         while len(history) == 0:
             try:
@@ -95,13 +86,13 @@ async def generate_image(order: ImageOrder, save_to_time=False, workflow_file=WO
             except KeyError as e:
                 if historyFailSafe < 100:
                     historyFailSafe += 1
-                    print("Waiting for history")
+                    logging.info("Waiting for history")
                     await asyncio.sleep(1)
                 else:
-                    print(f"History not found: {e}")
+                    logging.info(f"History not found: {e}")
                     ws.close()
                     return ""
-        print(history)
+        logging.info(history)
 
         # Since a ComfyUI workflow may contain multiple SaveImage nodes,
         # and each SaveImage node might save multiple images,
@@ -127,10 +118,10 @@ async def generate_image(order: ImageOrder, save_to_time=False, workflow_file=WO
                 else:
                     image.save(f"{OUTPUT_PATH}output_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
 
-        print("Generation Complete")
+        logging.info("Generation Complete")
 
     except Exception as e:
-        print(f"Error: {e}")
+        logging.info(f"Error: {e}")
         traceback.print_exc()
     finally:
         # Always close the WebSocket connection
@@ -139,7 +130,7 @@ async def generate_image(order: ImageOrder, save_to_time=False, workflow_file=WO
     return ""
 
 
-def look_for_node_by_name(node_name: object, workflow: object)-> int\
+def look_for_node_by_name(node_name: object, workflow: object) -> int \
         :
     """
     Look for a node by name in a ComfyUI workflow
@@ -153,10 +144,54 @@ def look_for_node_by_name(node_name: object, workflow: object)-> int\
             return int(node_id)
     return -1
 
+
+def apply_image_order_to_prompt(order: ImageOrder, prompt: dict) -> dict:
+    # Passing in the prompt
+    promptInputIndex = look_for_node_by_name("I_PROMPT_POSITIVE", prompt)
+    if promptInputIndex == -1:
+        logging.error("Error: Prompt node not found in workflow")
+    else:
+        prompt[f"{promptInputIndex}"]["inputs"]["value"] = order.to_prompt()
+
+    # Seed
+    samplerInputIndex = look_for_node_by_name("I_KSAMPLER", prompt)
+    if samplerInputIndex == -1:
+        logging.error("Error: Sampler node not found in workflow")
+    else:
+        prompt[f"{samplerInputIndex}"]["inputs"]["seed"] = order.Seed
+
+    # logging.info(prompt[f"Prompt: {promptInputIndex}"]["inputs"]["value"])
+
+    # Image Size
+    imageSizeIndex = look_for_node_by_name("I_IMAGE_SIZE", prompt)
+    if promptInputIndex == -1:
+        logging.error("Error: Image Size node not found in workflow")
+    else:
+        prompt[f"{imageSizeIndex}"]["inputs"]["width"] = order.Width
+        prompt[f"{imageSizeIndex}"]["inputs"]["height"] = order.Height
+
+    # logging.info(prompt[f"Prompt: {promptInputIndex}"]["inputs"]["value"])
+
+    inputs_value_ = prompt[f"{promptInputIndex}"]["inputs"]["value"]
+    logging.info(f"Prompt: {inputs_value_}")
+
+    return prompt
+
+
+def set_prompt_model(prompt: dict, model: ModelNames = ModelNames.DreamShaper) -> dict:
+    promptInputIndex = look_for_node_by_name("I_CHECKPOINT", prompt)
+    if promptInputIndex == -1:
+        logging.error("Error: Checkpoint node not found in workflow")
+    else:
+        prompt[f"{promptInputIndex}"]["inputs"]["ckpt_name"] = model.value
+    return prompt
+
+
 if __name__ == "__main__":
-    order = ImageOrder(
-        Text="Picture of a cat",
-        Style="cyberpunk",
-        Age=100
+    order_cat_test = ImageOrder(
+        Text="cat",
+        Style="modern",
+        Age=1,
+        Seed= random.randint(0, 1000000)
     )
-    asyncio.run(generate_image(order))
+    asyncio.run(generate_image(order_cat_test))

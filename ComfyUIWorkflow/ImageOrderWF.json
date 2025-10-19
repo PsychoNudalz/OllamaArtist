@@ -1,11 +1,11 @@
 {
   "3": {
     "inputs": {
-      "seed": 156680208700286,
+      "seed": 980350625001240,
       "steps": 20,
       "cfg": 8,
-      "sampler_name": "euler",
-      "scheduler": "normal",
+      "sampler_name": "dpmpp_2m_sde",
+      "scheduler": "karras",
       "denoise": 1,
       "model": [
         "4",
@@ -26,16 +26,16 @@
     },
     "class_type": "KSampler",
     "_meta": {
-      "title": "KSampler"
+      "title": "I_KSAMPLER"
     }
   },
   "4": {
     "inputs": {
-      "ckpt_name": "dreamshaper_8.safetensors"
+      "ckpt_name": "chilloutmix_NiPrunedFp32Fix.safetensors"
     },
     "class_type": "CheckpointLoaderSimple",
     "_meta": {
-      "title": "Load Checkpoint"
+      "title": "I_CHECKPOINT"
     }
   },
   "5": {
@@ -122,7 +122,7 @@
   },
   "12": {
     "inputs": {
-      "value": "Test"
+      "value": "cat"
     },
     "class_type": "PrimitiveString",
     "_meta": {
@@ -148,7 +148,7 @@
   },
   "15": {
     "inputs": {
-      "value": "Test"
+      "value": ""
     },
     "class_type": "PrimitiveString",
     "_meta": {
@@ -157,10 +157,7 @@
   },
   "16": {
     "inputs": {
-      "string_a": [
-        "11",
-        1
-      ],
+      "string_a": "",
       "string_b": [
         "15",
         0

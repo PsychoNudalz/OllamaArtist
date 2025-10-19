@@ -1,6 +1,5 @@
 # ... existing code ...
-from cmd import PROMPT
-
+import logging
 import ollama
 import datetime
 import time
@@ -14,6 +13,8 @@ from ImageOrder import ImageOrder
 
 MODEL = "gpt-oss:20b"
 running = True
+logging.basicConfig(level=logging.INFO)
+
 
 
 async def progress_printer():
@@ -43,7 +44,7 @@ def request_chat_imageOrder() -> ImageOrder:
     global running
     printer_thread = threading.Thread(target=start_async_progress_printer, daemon=True)
     printer_thread.start()
-    order: ImageOrder = ImageOrder(Text="", Style="", Age=100)
+    order: ImageOrder = ImageOrder(Text="", Style="", Age=0)
     # messages = [
     #     {"role": "system", "content": "You will be decide on an order for an image to be generated."
     #                                   "Rules:"
@@ -61,16 +62,20 @@ def request_chat_imageOrder() -> ImageOrder:
                    f"'Style': <style of the art>, "
                    f"'Age': <what age the image will mimic>"
                    f"'Seed': Random integer (200-20000) seed for the generation"
-                   "- Age and Seed MUST BE an integer value."
-                   "You will only return the order in json format.")
+                   f"'Width': Width of the image (500-1000)"
+                   f"'Height': Width of the image (500-1000)"
+                   "- Age, Seed, Width, Height MUST BE an integer value."
+                   "-No Quotation marks at the end of the json."
+                   "-You will only return the order in json format.")
     try:
         # result = ollama.chat(model=MODEL, messages=messages)
         result = ollama.generate(model=MODEL, prompt=prompt)
         responseString = result.get("response", "[No response returned]")
         result = ollama.generate(model=MODEL, prompt=f"Fix {responseString} to make sure it is json valid"
-                                                     f"only reply with the json")
+                                                     f"only reply with the json"
+                                                     f"-No Quotation marks at the end of the json.")
         responseString = result.get("response", "[Fix failed]")
-        print(responseString)
+
     except Exception as e:
         print(e)
         return order
@@ -78,6 +83,13 @@ def request_chat_imageOrder() -> ImageOrder:
         running = False
         printer_thread.join()
 
+    # Remove the second-to-last character
+    if len(responseString) >= 2:
+        responseString = responseString[:-2] + responseString[-1]
+        logging.info(f"Removed second-to-last character: {responseString}")
+
+
+    logging.info(responseString)
 
     try:
         order = ImageOrder.model_validate_json(responseString)
