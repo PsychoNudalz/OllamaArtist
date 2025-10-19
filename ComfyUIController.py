@@ -187,11 +187,24 @@ def set_prompt_model(prompt: dict, model: ModelNames = ModelNames.DreamShaper) -
     return prompt
 
 
+def ping() -> bool:
+    pingComplete: bool = True
+    try:
+        ws = websocket.WebSocket()
+        ws.connect(f"ws://{SERVER_ADDRESS}/ws?clientId={CLIENT_ID}")
+    except ConnectionRefusedError as e:
+        logging.info(f"Error connecting to the server: {SERVER_ADDRESS}\nMake sure ComfyUI is running\n{e}")
+        pingComplete = False
+    finally:
+        ws.close()
+    return pingComplete
+
+
 if __name__ == "__main__":
     order_cat_test = ImageOrder(
         Text="cat",
         Style="modern",
         Age=1,
-        Seed= random.randint(0, 1000000)
+        Seed=random.randint(0, 1000000)
     )
     asyncio.run(generate_image(order_cat_test))

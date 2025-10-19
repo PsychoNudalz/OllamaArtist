@@ -99,6 +99,13 @@ def request_chat_imageOrder() -> ImageOrder:
 
     return order
 
+def ping() -> bool:
+    try:
+        ollama.list()  # This will call the local Ollama daemon
+        return True
+    except Exception:
+        return False
+
 
 if __name__ == "__main__":
     # question = input("Ask me:\n")
