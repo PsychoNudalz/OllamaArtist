@@ -56,8 +56,12 @@ def request_chat_imageOrder() -> ImageOrder:
     prompt: str = ("You will be decide on an order for an image to be generated."
                    "Rules:"
                    "- The order output should follow the following json format: "
-                   "{'Text': <text of what to generate in string>, 'Style': <style of the art>, 'Age': <what age the image will mimic>}"
-                   "- Age MUST BE an integer value."
+                   f"{ImageOrder.to_string_prompt()}"
+                   f"'Text': <text of what to generate in string> "
+                   f"'Style': <style of the art>, "
+                   f"'Age': <what age the image will mimic>"
+                   f"'Seed': Random integer (200-20000) seed for the generation"
+                   "- Age and Seed MUST BE an integer value."
                    "You will only return the order in json format.")
     try:
         # result = ollama.chat(model=MODEL, messages=messages)

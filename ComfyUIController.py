@@ -1,3 +1,4 @@
+import datetime
 import json
 import urllib, urllib.parse, urllib.request
 import uuid
@@ -13,6 +14,7 @@ import websocket
 from ImageOrder import ImageOrder
 
 WORKFLOW_PATH = "ComfyUIWorkflow/"
+OUTPUT_PATH = "ImageOut/"
 
 SERVER_ADDRESS = "127.0.0.1:8188"
 CLIENT_ID = str(uuid.uuid4())
@@ -37,7 +39,7 @@ def get_image(filename, subfolder, folder_type):
         return response.read()
 
 
-async def generate_image(order: ImageOrder) -> str:
+async def generate_image(order: ImageOrder, save_to_time=False) -> str:
     # Loads the default workflow
     ComfyUIWorkflow = WORKFLOW_PATH + "Default.json"
     with open(ComfyUIWorkflow, "r", encoding="utf-8") as f:
@@ -102,13 +104,17 @@ async def generate_image(order: ImageOrder) -> str:
                 # Convert bytes to PIL Image
                 image = Image.open(io.BytesIO(image_data))
                 # Process image as needed
-                image.save(f"ImageOut/output_{node_id}.png")
+                if not save_to_time:
+                    image.save(f"{OUTPUT_PATH}output.png")
+                else:
+                    image.save(f"{OUTPUT_PATH}output_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
 
 
     except Exception as e:
         print(f"Error: {e}")
         traceback.print_exc()
     finally:
+        print("Generation Complete")
         # Always close the WebSocket connection
         ws.close()
 
