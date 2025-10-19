@@ -13,7 +13,10 @@ import websocket
 
 from ImageOrder import ImageOrder
 
+
 WORKFLOW_PATH = "ComfyUIWorkflow/"
+WORKFLOW_FILE = "ImageOrderWF.json"
+
 OUTPUT_PATH = "ImageOut/"
 
 SERVER_ADDRESS = "127.0.0.1:8188"
@@ -21,6 +24,12 @@ CLIENT_ID = str(uuid.uuid4())
 
 
 def queue_prompt(prompt, client_id):
+    """
+    Queue a prompt to be executed by ComfyUI
+    :param prompt:
+    :param client_id:
+    :return: json of the request
+    """
     p = {"prompt": prompt, "client_id": client_id}
     data = json.dumps(p).encode('utf-8')
     req = urllib.request.Request(f"http://{SERVER_ADDRESS}/prompt", data=data)
@@ -39,15 +48,22 @@ def get_image(filename, subfolder, folder_type):
         return response.read()
 
 
-async def generate_image(order: ImageOrder, save_to_time=False) -> str:
+async def generate_image(order: ImageOrder, save_to_time=False, workflow_file=WORKFLOW_FILE) -> str:
     # Loads the default workflow
-    ComfyUIWorkflow = WORKFLOW_PATH + "Default.json"
+    ComfyUIWorkflow = WORKFLOW_PATH + workflow_file
     with open(ComfyUIWorkflow, "r", encoding="utf-8") as f:
         json_str = f.read()
     prompt = json.loads(json_str)
 
-    # Modify the text prompt for the positive CLIPTextEncode node
-    prompt["6"]["inputs"]["text"] = "masterpiece best quality man"
+    #Passing in the prompt
+    promptInputIndex = look_for_node_by_name("I_PROMPT_POSITIVE", prompt)
+    if promptInputIndex == -1:
+        print("Prompt node not found in workflow")
+        return ""
+    else:
+        prompt[f"{promptInputIndex}"]["inputs"]["value"] = order.to_prompt()
+
+    print(prompt[f"{promptInputIndex}"]["inputs"]["value"])
 
     # Change the seed for different results
     prompt["3"]["inputs"]["seed"] = random.randint(0, 1000000)
@@ -66,6 +82,8 @@ async def generate_image(order: ImageOrder, save_to_time=False) -> str:
         # Get prompt_id for tracking the execution
         prompt_id = queue_prompt(prompt, CLIENT_ID)['prompt_id']
 
+
+        ## Handling history
         # await asyncio.sleep(5)
         history = {}
         historyFailSafe:int = 0
@@ -109,17 +127,36 @@ async def generate_image(order: ImageOrder, save_to_time=False) -> str:
                 else:
                     image.save(f"{OUTPUT_PATH}output_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
 
+        print("Generation Complete")
 
     except Exception as e:
         print(f"Error: {e}")
         traceback.print_exc()
     finally:
-        print("Generation Complete")
         # Always close the WebSocket connection
         ws.close()
 
     return ""
 
 
+def look_for_node_by_name(node_name: object, workflow: object)-> int\
+        :
+    """
+    Look for a node by name in a ComfyUI workflow
+    :param node_name:
+    :param workflow: json string of the workflow
+    :return: index of the found node
+    """
+    for node_id, node_data in workflow.items():
+        meta = node_data.get("_meta", {})
+        if meta.get("title") == node_name:
+            return int(node_id)
+    return -1
+
 if __name__ == "__main__":
-    asyncio.run(generate_image(ImageOrder()))
+    order = ImageOrder(
+        Text="Picture of a cat",
+        Style="cyberpunk",
+        Age=100
+    )
+    asyncio.run(generate_image(order))

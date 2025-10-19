@@ -56,7 +56,7 @@ def request_chat_imageOrder() -> ImageOrder:
     prompt: str = ("You will be decide on an order for an image to be generated."
                    "Rules:"
                    "- The order output should follow the following json format: "
-                   f"{ImageOrder.to_string_prompt()}"
+                   f"{ImageOrder.to_string_prompt_format()}"
                    f"'Text': <text of what to generate in string> "
                    f"'Style': <style of the art>, "
                    f"'Age': <what age the image will mimic>"

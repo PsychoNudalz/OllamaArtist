@@ -14,8 +14,11 @@ class ImageOrder(BaseModel):
         # If you prefer a compact form, use ensure_ascii=False.
         return self.model_dump_json(indent=None, ensure_ascii=False)
     @staticmethod
-    def to_string_prompt()-> str:
+    def to_string_prompt_format()-> str:
         fields = ImageOrder.model_fields  # Pydantic v2
         field_list = [f"{name}: {field.annotation.__name__}" for name, field in fields.items()]
         fields_str = ", ".join(field_list)
         return fields_str
+
+    def to_prompt(self)->str:
+        return f"{self.Text}, (({self.Style})), aged by {self.Age} years"
