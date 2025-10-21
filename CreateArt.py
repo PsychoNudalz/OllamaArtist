@@ -5,14 +5,16 @@ import logging
 import ComfyUIController
 
 
-def Create():
+async def Create() -> str:
     order: ImageOrder = OllamaArtist.request_chat_imageOrder()
     if not order or order.Text == "":
         logging.error("No order received from Ollama")
         exit(1)
 
-    asyncio.run(ComfyUIController.generate_image(order, True))
+    image_path =  await ComfyUIController.generate_image(order, True)
+
+    return image_path
 
 
 if __name__ == "__main__":
-    Create()
+    asyncio.run(Create())

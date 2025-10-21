@@ -60,6 +60,8 @@ async def generate_image(order: ImageOrder, save_to_time=False, workflow_file=WO
 
     prompt = apply_image_order_to_prompt(order, prompt)
 
+    image_name = ""
+
     try:
 
         ws = websocket.WebSocket()
@@ -114,9 +116,11 @@ async def generate_image(order: ImageOrder, save_to_time=False, workflow_file=WO
                 image = Image.open(io.BytesIO(image_data))
                 # Process image as needed
                 if not save_to_time:
-                    image.save(f"{OUTPUT_PATH}output.png")
+                    image_name = f"output.png"
+
                 else:
-                    image.save(f"{OUTPUT_PATH}output_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
+                    image_name = f"output_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                image.save(OUTPUT_PATH+image_name)
 
         logging.info("Generation Complete")
 
@@ -127,7 +131,7 @@ async def generate_image(order: ImageOrder, save_to_time=False, workflow_file=WO
         # Always close the WebSocket connection
         ws.close()
 
-    return ""
+    return image_name
 
 
 def look_for_node_by_name(node_name: object, workflow: object) -> int \
