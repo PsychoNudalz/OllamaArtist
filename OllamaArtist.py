@@ -99,6 +99,10 @@ def request_chat_imageOrder() -> ImageOrder:
 
     return order
 
+def request_chat_imageOrder_json()->str:
+    order = request_chat_imageOrder()
+    return order.to_json()
+
 def ping() -> bool:
     try:
         ollama.list()  # This will call the local Ollama daemon

@@ -1,4 +1,7 @@
+import json
 import os
+
+import socket
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -22,9 +25,29 @@ app.add_middleware(
 
 IMAGE_DIR = "ImageOut"
 
+
+def get_lan_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't have to be reachable
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return ip
+
+
+@app.get("/api/server-ip")
+async def server_ip():
+    return {"ip": get_lan_ip()}
+
+
 @app.get("/api/ping")
 def ping():
     return {"message": "Hello World"}
+
 
 @app.get("/api/ping/systems")
 def ping_systems():
@@ -39,6 +62,7 @@ def ping_systems():
         )
     return {"message": "Ollama and ComfyUI are up and running!"}
 
+
 #
 # # Serve index.html for all other routes
 # @app.get("/{full_path:path}")
@@ -46,11 +70,40 @@ def ping_systems():
 #     index_path = os.path.join("wwwroot/vue-ollama-artist/public/", "index.html")
 #     return FileResponse(index_path)
 #
+@app.post("/api/generate/order")
+async def generate_order():
+    # get raw JSON string from your own function
+    image_order_json = await CreateArt.GetOrder_JSON()
+
+    # safely load into dict
+    image_order = json.loads(image_order_json)
+
+    # extract values
+    text = image_order.get("Text")
+    style = image_order.get("Style")
+    age = image_order.get("Age")
+
+    return {
+        "message": "Generation complete!",
+        "image_prompt": text,
+        "image_style": style,
+        "image_age": age,
+        "image_order": image_order
+    }
+
+
+@app.post("/api/generate/{order}")
+async def generateImage(order: str):
+    image_order = await CreateArt.CreateFromJson(order)
+    image_dic = json.loads(image_order)
+    return {"message": "Generation complete!", "image_prompt": image_dic["Text"], "image_style": image_dic["Style"],
+            "image_age": image_dic["Age"]}
+
 
 @app.post("/api/generate")
 async def generate():
-    image_name = await CreateArt.Create()
-    return {"message": "Generation complete!","image":image_name}
+    image_create = await CreateArt.Create()
+    return {"message": "Generation complete!", "image": image_create, "image_details": ""}
 
 
 @app.get("/api/image/{image_name}")
