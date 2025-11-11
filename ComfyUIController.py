@@ -53,8 +53,8 @@ def get_image(filename, subfolder, folder_type):
 
 async def generate_image(order: ImageOrder, save_to_time=False, workflow_file=WORKFLOW_FILE) -> str:
     # Loads the default workflow
-    ComfyUIWorkflow = WORKFLOW_PATH + workflow_file
-    with open(ComfyUIWorkflow, "r", encoding="utf-8") as f:
+    comfy_ui_workflow = WORKFLOW_PATH + workflow_file
+    with open(comfy_ui_workflow, "r", encoding="utf-8") as f:
         json_str = f.read()
     prompt = json.loads(json_str)
 

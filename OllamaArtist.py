@@ -40,7 +40,7 @@ def process_chat(question: str):
         printer_thread.join()
 
 
-def request_chat_imageOrder() -> ImageOrder:
+def request_chat_image_order() -> ImageOrder:
     global running
     printer_thread = threading.Thread(target=start_async_progress_printer, daemon=True)
     printer_thread.start()
@@ -99,8 +99,9 @@ def request_chat_imageOrder() -> ImageOrder:
 
     return order
 
-def request_chat_imageOrder_json()->str:
-    order = request_chat_imageOrder()
+
+def request_chat_image_order_json() -> str:
+    order = request_chat_image_order()
     return order.to_json()
 
 def ping() -> bool:
@@ -114,4 +115,4 @@ def ping() -> bool:
 if __name__ == "__main__":
     # question = input("Ask me:\n")
     # process_chat(question)
-    request_chat_imageOrder()
+    request_chat_image_order()

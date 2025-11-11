@@ -73,7 +73,7 @@ def ping_systems():
 @app.post("/api/generate/order")
 async def generate_order():
     # get raw JSON string from your own function
-    image_order_json = await CreateArt.GetOrder_JSON()
+    image_order_json = await CreateArt.get_order_json()
 
     # safely load into dict
     image_order = json.loads(image_order_json)
@@ -93,8 +93,8 @@ async def generate_order():
 
 
 @app.post("/api/generate/{order}")
-async def generateImage(order: str):
-    image_order = await CreateArt.CreateFromJson(order)
+async def generate_image(order: str):
+    image_order = await CreateArt.create_from_json(order)
     image_dic = json.loads(image_order)
     return {"message": "Generation complete!", "image_prompt": image_dic["Text"], "image_style": image_dic["Style"],
             "image_age": image_dic["Age"]}
@@ -102,7 +102,7 @@ async def generateImage(order: str):
 
 @app.post("/api/generate")
 async def generate():
-    image_create = await CreateArt.Create()
+    image_create = await CreateArt.create()
     return {"message": "Generation complete!", "image": image_create, "image_details": ""}
 
 
