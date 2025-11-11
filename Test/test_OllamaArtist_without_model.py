@@ -14,6 +14,11 @@ import OllamaArtist
 def test_remove_quotes_at_end():
     test_string = "{\"test\"\"}"
     assert OllamaArtist.remove_quotes_at_end(test_string) == "{\"test\"}"
+
+
+def test_remove_quotes_at_end_no_quotes():
+    test_string = "{test}"
+    assert OllamaArtist.remove_quotes_at_end(test_string) == "{test}"
 #
 # def test_request_chat_image_order():
 #     if(not test_ping()):return False
