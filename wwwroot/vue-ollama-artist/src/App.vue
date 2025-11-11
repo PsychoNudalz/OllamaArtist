@@ -1,8 +1,8 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
+  <img class="app-logo" alt="app-logo" src="./assets/manFace.png">
   <PingButton/>
   <GenerateButton/>
-<!--  <HelloWorld msg="Welcome to Your Vue.js App"/>-->
+  <!--  <HelloWorld msg="Welcome to Your Vue.js App"/>-->
 </template>
 
 <script>
@@ -29,5 +29,13 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+
+.app-logo {
+  display: block;
+  margin: 0 auto;
+  max-width: 300px;
+  max-height: 300px;
 }
 </style>

@@ -5,7 +5,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 ## Frontend:
 ```
-cd .\wwwroot\
+cd ./wwwroot/vue-ollama-artist
 npm install
 npm run serve
 ```

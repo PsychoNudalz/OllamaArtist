@@ -1,6 +1,8 @@
 <script setup>
 import {ref} from 'vue'
+import ImageOrder from "@/components/ImageOrder"
 
+// Generating a new image
 const response = ref('')
 const image_name = ref('')
 const image_details = ref('')
@@ -51,6 +53,7 @@ async function generateOrder() {
   }
 }
 
+
 async function generateFromOrder() {
   try {
     response.value = 'Generating...'
@@ -72,9 +75,48 @@ async function generateFromOrder() {
 
   }
 }
+// Taking user input
+const prompt_idea = ref('')
+const prompt_style = ref('')
+const prompt_age = ref(0)
+
+function saveData() {
+  console.log({
+    prompt_idea: prompt_idea.value,
+    prompt_style: prompt_style.value,
+    prompt_age: prompt_age.value
+
+
+  })
+
+  const image_order_object = new ImageOrder({prompt_idea: prompt_idea.value, prompt_style: prompt_style.value, prompt_age: prompt_age.value})
+  image_order.value = image_order_object.toJSON()
+
+}
 </script>
 
 <template>
+  <div class="p-4 max-w-md mx-auto"> Input zone
+    <form @submit.prevent="saveData" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium">Idea</label>
+        <input v-model="prompt_idea" type="text" class="border p-2 w-full rounded" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Style</label>
+        <input v-model="prompt_style" type="text" class="border p-2 w-full rounded" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Age</label>
+        <input v-model.number="prompt_age" type="number" class="border p-2 w-full rounded" />
+      </div>
+
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button>
+    </form>
+  </div>
+
   <div>Generate Buttons
     <div>
       <button @click="generateFull">Generate</button>
