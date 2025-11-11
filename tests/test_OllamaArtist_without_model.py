@@ -1,5 +1,5 @@
 import pytest
-import OllamaArtist
+from src import OllamaArtist
 
 
 # def test_ping():

@@ -4,7 +4,7 @@ import logging
 
 import ComfyUIController
 import OllamaArtist
-from ImageOrder import ImageOrder
+from src.ImageOrder import ImageOrder
 
 
 async def create() -> str:

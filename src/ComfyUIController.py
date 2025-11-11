@@ -12,15 +12,15 @@ import io
 
 import websocket
 
-from ModelEnum import ModelNames
-from ImageOrder import ImageOrder
+from src.ModelEnum import ModelNames
+from src.ImageOrder import ImageOrder
 
 logging.basicConfig(level=logging.INFO)
 
-WORKFLOW_PATH = "ComfyUIWorkflow/"
+WORKFLOW_PATH = "../ComfyUIWorkflow/"
 WORKFLOW_FILE = "ImageOrderWF.json"
 
-OUTPUT_PATH = "ImageOut/"
+OUTPUT_PATH = "../ImageOut/"
 
 SERVER_ADDRESS = "127.0.0.1:8188"
 CLIENT_ID = str(uuid.uuid4())

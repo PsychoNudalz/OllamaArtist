@@ -23,7 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-IMAGE_DIR = "ImageOut"
+IMAGE_DIR = "../ImageOut"
 
 
 def get_lan_ip():

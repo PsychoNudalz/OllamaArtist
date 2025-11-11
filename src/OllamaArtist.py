@@ -6,7 +6,7 @@ import threading
 
 import ollama
 
-from ImageOrder import ImageOrder
+from src.ImageOrder import ImageOrder
 
 MODEL = "gpt-oss:20b"
 running = True
