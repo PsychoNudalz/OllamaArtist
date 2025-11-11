@@ -1,20 +1,16 @@
 # ... existing code ...
-import logging
-import ollama
-import datetime
-import time
 import asyncio
+import datetime
+import logging
 import threading
-import json
 
-from pyexpat.errors import messages
+import ollama
 
 from ImageOrder import ImageOrder
 
 MODEL = "gpt-oss:20b"
 running = True
 logging.basicConfig(level=logging.INFO)
-
 
 
 async def progress_printer():
@@ -40,7 +36,7 @@ def process_chat(question: str):
         printer_thread.join()
 
 
-def request_chat_image_order() -> ImageOrder:
+def request_chat_image_order() -> ImageOrder | None:
     global running
     printer_thread = threading.Thread(target=start_async_progress_printer, daemon=True)
     printer_thread.start()
@@ -70,11 +66,11 @@ def request_chat_image_order() -> ImageOrder:
     try:
         # result = ollama.chat(model=MODEL, messages=messages)
         result = ollama.generate(model=MODEL, prompt=prompt)
-        responseString = result.get("response", "[No response returned]")
-        result = ollama.generate(model=MODEL, prompt=f"Fix {responseString} to make sure it is json valid"
+        response_string = result.get("response", "[No response returned]")
+        result = ollama.generate(model=MODEL, prompt=f"Fix {response_string} to make sure it is json valid"
                                                      f"only reply with the json"
                                                      f"-No Quotation marks at the end of the json.")
-        responseString = result.get("response", "[Fix failed]")
+        response_string = result.get("response", "[Fix failed]")
 
     except Exception as e:
         print(e)
@@ -83,26 +79,33 @@ def request_chat_image_order() -> ImageOrder:
         running = False
         printer_thread.join()
 
-    # Remove the second-to-last character
-    if len(responseString) >= 2:
-        responseString = responseString[:-2] + responseString[-1]
-        logging.info(f"Removed second-to-last character: {responseString}")
-
-
-    logging.info(responseString)
+    response_string = remove_quotes_at_end(response_string)
 
     try:
-        order = ImageOrder.model_validate_json(responseString)
+        order = ImageOrder.model_validate_json(response_string)
     except Exception as e:
-        print(f"image parse error: {responseString}")
-    print(order.to_json())
+        logging.error(f"image parse error: {response_string}")
+        return None
+
+    logging.info(order.to_json())
 
     return order
+
+
+def remove_quotes_at_end(response_string) -> str:
+    # Remove the second-to-last character
+    if len(response_string) >= 2 and response_string[-2] == "\"":
+        response_string = response_string[:-2] + response_string[-1]
+        logging.info(f"Removed second-to-last character: {response_string}")
+
+    logging.info(response_string)
+    return response_string
 
 
 def request_chat_image_order_json() -> str:
     order = request_chat_image_order()
     return order.to_json()
+
 
 def ping() -> bool:
     try:
